@@ -8,19 +8,33 @@
 
     public class UserStatsCollection
     {
+        /// <summary>
+        /// List of UserStats serving as the backbone of this object.
+        /// </summary>
         private List<UserStats> _userStatsList;
+
+        /// <summary>
+        /// Username of to whom these stats belong.
+        /// </summary>
         private string _username;
 
+        /// <summary>
+        /// Constructs a UserStatsCollection object.
+        /// </summary>
+        /// <param name="username">Username of player.</param>
+        /// <param name="userStatsTableEntities">Deserialized database UserStats rows.</param>
         public UserStatsCollection(string username, List<UserStatsTableEntity> userStatsTableEntities)
         {
             this._userStatsList = new List<UserStats>();
             this._username = username;
 
+            // Convert each UserStatsTableEntity object into an object holding condensed and organized essential information and append to the backing list.
             foreach (UserStatsTableEntity entity in userStatsTableEntities)
             {
                 this._userStatsList.Add(new UserStats(entity));
             }
 
+            // Sort the list in chronological order.
             this._userStatsList.Sort((x, y) =>
             {
                 return x.Timestamp > y.Timestamp ? 1
@@ -29,6 +43,12 @@
             });
         }
 
+        /// <summary>
+        /// Retrieve the collection's aggregate stats looking back a certain amount of time.
+        /// Stats are presented based on the delta between a user's total global stat entries.
+        /// </summary>
+        /// <param name="lookback">Number of days worth of stats to consider.</param>
+        /// <returns></returns>
         public string GetTimeBoundedUserStatsString(int lookback)
         {
             int startIndex = 0;
@@ -39,12 +59,14 @@
             {
                 if (userStats.Timestamp >= maxLookbackTime)
                 {
+                    // Break out of loop as soon as the first record within the lookback time is found.
                     break;
                 }
 
                 startIndex++;
             }
 
+            // Initialize stats as negative. These should only be negative when a user has no previous table entries.
             int playersBagged = -1;
             int matchesPlayed = -1;
             int minutesPlayed = -1;
@@ -58,6 +80,7 @@
 
             StringBuilder sb = new StringBuilder();
 
+            // Calculate stats when there's more than one entry.
             if (startIndex != endIndex && endIndex != -1)
             {
                 ModeStats aggregateMode0 = this._userStatsList[startIndex].AggregateModeStats;
@@ -79,8 +102,10 @@
                 }
             }
 
+            // When a user has only top 1 placements and at least 1 player bagged, display an inifinity sign to make them feel special.
             string kdString = matchesPlayed == top1 && matchesPlayed > 0 && playersBagged > 0 ? "\u221E" : Math.Round(kd, 2).ToString();
 
+            // Append all of the stats to the string builder.
             sb.AppendLine($"Username: {this._username}");
             sb.AppendLine($"Players Bagged: {playersBagged}");
             sb.AppendLine($"K/D: {kdString}");
@@ -96,21 +121,31 @@
             return sb.ToString();
         }
 
-        public void PrintAggregateModeStats()
-        {
-            foreach (UserStats userStat in _userStatsList)
-            {
-                Console.WriteLine("========================");
-                Console.WriteLine(userStat.AggregateModeStats.ToString());
-            }
-        }
-
+        /// <summary>
+        /// Class representing a user's statistics in an organized fashion.
+        /// Each game mode (solo, duo, etc.) is broken up into an array of ModeStats.
+        /// </summary>
         private class UserStats
         {
+            /// <summary>
+            /// Timestamp of the corresponding UserStats table entry.
+            /// </summary>
             public DateTimeOffset? Timestamp;
+
+            /// <summary>
+            /// Aggregate stats across all game modes.
+            /// </summary>
             public ModeStats AggregateModeStats;
+
+            /// <summary>
+            /// Stats pertaining to each game mode.
+            /// </summary>
             public ModeStats[] ModeStats;
 
+            /// <summary>
+            /// Creates a UserStats object.
+            /// </summary>
+            /// <param name="userStatsTableEntity"></param>
             public UserStats(UserStatsTableEntity userStatsTableEntity)
             {
                 this.Timestamp = userStatsTableEntity.Timestamp;
@@ -122,6 +157,10 @@
                 this.AggregateModeStats = this.getAggregateModeStats();
             }
 
+            /// <summary>
+            /// Retrieves ModeStats representing all game modes combined.
+            /// </summary>
+            /// <returns>ModeStats object representing all game modes.</returns>
             private ModeStats getAggregateModeStats()
             {
                 ModeStats aggregateModeStats = new ModeStats("aggregate")
@@ -142,6 +181,11 @@
                 return aggregateModeStats;
             }
 
+            /// <summary>
+            /// Finds the sum of the provided statistic name across all game modes.
+            /// </summary>
+            /// <param name="propertyName">Property name for which to find the sum.</param>
+            /// <returns>Sum of given property across all game modes.</returns>
             private int getSumOfGivenIntStat(string propertyName)
             {
                 int sum = 0;
@@ -155,32 +199,29 @@
             }
         }
 
+        /// <summary>
+        /// Class containing essential statistics for a user pertaining to a single game mode.
+        /// </summary>
         public class ModeStats
         {
             public string Mode { get; set; }
-
             public DateTime LastModified { get; set; }
-
             public int PlayersBagged { get; set; }
-
             public int MatchesPlayed { get; set; }
-
             public int MinutesPlayed { get; set; }
-
             public int Top1 { get; set; }
-
             public int Top3 { get; set; }
-
             public int Top5 { get; set; }
-
             public int Top6 { get; set; }
-
             public int Top10 { get; set; }
-
             public int Top12 { get; set; }
-
             public int Top25 { get; set; }
 
+            /// <summary>
+            /// Constructs a ModeStats object. This constructor should be used for non-aggregate purposes.
+            /// </summary>
+            /// <param name="mode">Game mode.</param>
+            /// <param name="stats">JObject representing a specific game mode's stats.</param>
             public ModeStats(string mode, JObject? stats)
             {
                 long lastModifiedUnix = long.Parse(stats.GetValue("lastmodified").ToString());
@@ -208,6 +249,12 @@
                 this.Top25 = top25 + this.Top12;
             }
 
+            /// <summary>
+            /// Constructs a ModeStats object. Use this constructor for aggregate purposes.
+            /// Properties need to be assigned individually when creating an aggregate object
+            /// as there is no corresponding JSON object stored in the Azure database.
+            /// </summary>
+            /// <param name="mode">Game mode or "aggregate".</param>
             public ModeStats(string mode)
             {
                 if (mode != "aggregate")
@@ -216,19 +263,6 @@
                 }
 
                 this.Mode = mode;
-            }
-
-            public override string ToString()
-            {
-                StringBuilder sb = new StringBuilder();
-
-                sb.AppendLine($"Mode: {this.Mode}");
-                sb.AppendLine($"Last Modified: {this.LastModified}");
-                sb.AppendLine($"Players Bagged: {this.PlayersBagged}");
-                sb.AppendLine($"Matches Played: {this.MatchesPlayed}");
-                sb.AppendLine($"Minutes Played: {this.MinutesPlayed}");
-
-                return sb.ToString();
             }
         }
     }
