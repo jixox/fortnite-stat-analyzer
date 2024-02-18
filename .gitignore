@@ -6,6 +6,8 @@ test/UnitTest1.cs
 
 # Ignore generated Azurite files.
 __azurite_db*
+__blobstorage__/
+__queuestorage__/
 
 # Ignore VS generated directories
 .vscode/
