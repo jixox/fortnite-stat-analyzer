@@ -111,7 +111,7 @@
             sb.AppendLine($"K/D: {kdString}");
             sb.AppendLine($"K/Min: {Math.Round(km, 2)}");
             sb.AppendLine($"Matches Played: {matchesPlayed}");
-            sb.AppendLine($"Minutes Played: {minutesPlayed} ({minutesPlayed / 60} hours)");
+            sb.AppendLine($"Minutes Played: {minutesPlayed} ({Math.Round(minutesPlayed / (double)60, 1)} hours)");
             sb.AppendLine($"Top 1: {top1}");
             sb.AppendLine($"Top 3: {top3}");
             sb.AppendLine($"Top 5: {top5}");
