@@ -74,14 +74,15 @@ namespace Spca.Function
             }
 
             // Step into the meat of the logic.
-            this.runInternal().Wait();
+            this.RunInternal(true).Wait();
         }
 
         /// <summary>
         /// Retrieves Fortnite stats, calculates deltas for each player, and sends text messages.
         /// </summary>
+        /// <param name="shouldSendText">Whether or not to send a text message.</param>
         /// <returns>Task representing operations.</returns>
-        private async Task runInternal()
+        public async Task RunInternal(bool shouldSendText)
         {
             // Initialize the Twilio client.
             // I'm assuming the MyTimerTrigger constructor gets called only once per service restart, so I'd like this client to not remain undisposed for long durations,
@@ -110,10 +111,13 @@ namespace Spca.Function
                 message += collection.GetTimeBoundedUserStatsString(lookback: 1) + "\n";
             }
 
-            // Send texts to each player.
-            foreach (PlayerInfoTableEntity playerInfo in playerInfos)
+            if (shouldSendText)
             {
-                this.SendText(playerInfo.Phone, message);
+                // Send texts to each player.
+                foreach (PlayerInfoTableEntity playerInfo in playerInfos)
+                {
+                    this.SendText(playerInfo.Phone, message);
+                }
             }
 
             this._logger.LogInformation($"Text message being sent:\n{message}");
