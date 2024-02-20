@@ -93,7 +93,7 @@ namespace Spca.Function
             List<PlayerInfoTableEntity> playerInfos = this._tableManager.LoadPlayerInfoTableEntities();
 
             Dictionary<string, string> cohortMessages = new Dictionary<string, string>();
-            int lookback = 2;
+            int lookback = 1;
 
             foreach (PlayerInfoTableEntity playerInfo in playerInfos)
             {
