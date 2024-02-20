@@ -61,7 +61,7 @@ namespace Spca.Function
         /// </summary>
         /// <param name="myTimer">NCRONTAB timer object.</param>
         [Function("MyTimerTrigger")]
-        public void Run([TimerTrigger("0 0 9 * * *")] TimerInfo myTimer)
+        public void Run([TimerTrigger("0 0 13 * * *")] TimerInfo myTimer)
         {
             // Update the timer's latest run time.
             MyTimerTrigger.RunTime = DateTime.UtcNow;
