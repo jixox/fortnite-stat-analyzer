@@ -91,7 +91,9 @@ namespace Spca.Function
 
             // Load player account information from database.
             List<PlayerInfoTableEntity> playerInfos = this._tableManager.LoadPlayerInfoTableEntities();
-            string message = "";
+
+            Dictionary<string, string> cohortMessages = new Dictionary<string, string>();
+            int lookback = 2;
 
             foreach (PlayerInfoTableEntity playerInfo in playerInfos)
             {
@@ -107,20 +109,51 @@ namespace Spca.Function
                 // Bundle all of the user's stats into a single UserStatsCollection object.
                 UserStatsCollection collection = new UserStatsCollection(playerInfo.Username, userStatsTableEntities);
 
-                // Append the user's aggregated stats to the text message.
-                message += collection.GetTimeBoundedUserStatsString(lookback: 1) + "\n";
-            }
+                // Retrieve the user's time-bounded aggregate stat bundle in string form.
+                string timeBoundedUserStats = collection.GetTimeBoundedUserStatsString(lookback: lookback) + "\n";
 
-            if (shouldSendText)
-            {
-                // Send texts to each player.
-                foreach (PlayerInfoTableEntity playerInfo in playerInfos)
+                // Each players cohort(s) are in the form of "c1,c2,c3" (etc.) in the Azure database.
+                string[] cohorts = playerInfo.Cohort.Split(',');
+
+                // Append the users' time-bounded stats to each of their cohorts' messages.
+                // Think of a "cohort" as a group of friends. Each group of friends receives all stats of players in their cohort.
+                // A player can have multiple cohorts.
+                foreach (string cohort in cohorts)
                 {
-                    this.SendText(playerInfo.Phone, message);
+                    if (cohortMessages.TryGetValue(cohort, out _))
+                    {
+                        // Append the current user's stats to their pre-existing cohort message.
+                        cohortMessages[cohort] += timeBoundedUserStats;
+                    }
+                    else
+                    {
+                        // Begin this cohort's message with the first user's stats.
+                        cohortMessages.Add(cohort, $"Stats from the past {lookback} day(s):\n\n{timeBoundedUserStats}");
+                    }
                 }
             }
 
-            this._logger.LogInformation($"Text message being sent:\n{message}");
+            // Send texts to each player.
+            // If a player is in multiple cohorts, send one per each.
+            foreach (PlayerInfoTableEntity playerInfo in playerInfos)
+            {
+                string[] cohorts = playerInfo.Cohort.Split(',');
+
+                foreach (string cohort in cohorts)
+                {
+                    if (shouldSendText)
+                    {
+                        this.SendText(playerInfo.Phone, cohortMessages[cohort]);
+                    }
+                }
+            }
+
+            // Sprinkle in some extra logging for debugging purposes.
+            foreach (KeyValuePair<string, string> cohortMessage in cohortMessages)
+            {
+                Console.WriteLine($"Cohort {cohortMessage.Key} message:\n\n{cohortMessage.Value}");
+                Console.WriteLine("=========================================");
+            }
         }
 
         /// <summary>

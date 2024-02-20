@@ -143,5 +143,6 @@
         public string Phone { get; set; } = string.Empty;
         public string EpicId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+        public string Cohort { get; set; } = string.Empty;
     }
 }
