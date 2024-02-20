@@ -57,7 +57,7 @@ namespace Spca.Function
         }
 
         /// <summary>
-        /// Entry point into project's logic. Triggered every morning at 0900 UTC.
+        /// Entry point into project's logic. Triggered every morning at 1300 UTC.
         /// </summary>
         /// <param name="myTimer">NCRONTAB timer object.</param>
         [Function("MyTimerTrigger")]
