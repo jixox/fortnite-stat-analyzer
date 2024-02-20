@@ -151,8 +151,7 @@ namespace Spca.Function
             // Sprinkle in some extra logging for debugging purposes.
             foreach (KeyValuePair<string, string> cohortMessage in cohortMessages)
             {
-                Console.WriteLine($"Cohort {cohortMessage.Key} message:\n\n{cohortMessage.Value}");
-                Console.WriteLine("=========================================");
+                this._logger.LogInformation($"Cohort {cohortMessage.Key} message:\n\n{cohortMessage.Value}\n===============================\n");
             }
         }
 
