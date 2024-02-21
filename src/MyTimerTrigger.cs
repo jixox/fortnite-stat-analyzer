@@ -104,7 +104,7 @@ namespace Spca.Function
                 this._tableManager.WriteUserStats(playerInfo.Username, playerInfo.EpicId, globalStats);
 
                 // Read all of the user's records in the database into a list of UserStatsTableEntity objects.
-                List<UserStatsTableEntity> userStatsTableEntities = this._tableManager.ReadUserStatsTableEntities(playerInfo.Username, playerInfo.EpicId);
+                List<UserStatsTableEntity> userStatsTableEntities = this._tableManager.ReadUserStatsTableEntities(playerInfo.EpicId);
                 
                 // Bundle all of the user's stats into a single UserStatsCollection object.
                 UserStatsCollection collection = new UserStatsCollection(playerInfo.Username, userStatsTableEntities);

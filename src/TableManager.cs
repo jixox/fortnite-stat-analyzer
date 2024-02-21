@@ -54,10 +54,9 @@
         /// <summary>
         /// Reads all global stats pertaining to a user from the UserStats table.
         /// </summary>
-        /// <param name="username">Username of player.</param>
         /// <param name="partition">Azure database partition. This is usually the Epic account Id pertaining to the given username.</param>
         /// <returns>List of UserStatsTableEntity objects read from the UserStats table.</returns>
-        public List<UserStatsTableEntity> ReadUserStatsTableEntities(string username, string partition)
+        public List<UserStatsTableEntity> ReadUserStatsTableEntities(string partition)
         {
             TableClient tableClient = this._tableServiceClient.GetTableClient(TableManager.UserStatsTableName);
             List<UserStatsTableEntity> collection = new List<UserStatsTableEntity>();
