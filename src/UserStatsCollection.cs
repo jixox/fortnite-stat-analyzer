@@ -55,22 +55,23 @@
             // Retrieve the time-bounded user stats pertaining to the previous lookback period.
             // For example, if the lookback period is one day, gather stats from between (2d .. 1d).
             // The sole purpose of this is to supply previous values to the method generating up / down rate of change arrows.
+            // Appending ample time (10 minutes) to the endTime in order to account for the previous program's runtime.
             TimeBoundedUserStats prevBoundedUserStats = this.getTimeBoundedUserStatsStringAux(
                 MyTimerTrigger.RunTime.AddDays(-2 * lookback),
-                MyTimerTrigger.RunTime.AddDays(-1 * lookback));
+                MyTimerTrigger.RunTime.AddDays(-1 * lookback).AddMinutes(10));
 
             // Retrieve the time-bounded user stats pertaining to the current lookback period.
             TimeBoundedUserStats currBoundedUserStats = this.getTimeBoundedUserStatsStringAux(
                 MyTimerTrigger.RunTime.AddDays(-1 * lookback),
-                MyTimerTrigger.RunTime);
+                DateTime.UtcNow);
 
             int playersBagged = currBoundedUserStats.PlayersBagged;
             int matchesPlayed = currBoundedUserStats.MatchesPlayed;
             int minutesPlayed = currBoundedUserStats.MinutesPlayed;
-            int top25 = currBoundedUserStats.Top25;
-            int top10 = currBoundedUserStats.Top10;
-            int top5 = currBoundedUserStats.Top5;
-            int top3 = currBoundedUserStats.Top3;
+            //int top25 = currBoundedUserStats.Top25;
+            //int top10 = currBoundedUserStats.Top10;
+            //int top5 = currBoundedUserStats.Top5;
+            //int top3 = currBoundedUserStats.Top3;
             int top1 = currBoundedUserStats.Top1;
             double kd = currBoundedUserStats.Kd;
             double km = currBoundedUserStats.Km;
@@ -88,10 +89,10 @@
             sb.AppendLine($"Matches Played: {matchesPlayed} {this.getRateOfChangeArrow(prevBoundedUserStats.MatchesPlayed, currBoundedUserStats.MatchesPlayed)}");
             sb.AppendLine($"Minutes Played: {minutesPlayed} ({Math.Abs(Math.Round(minutesPlayed / (double)60, 1))} hours) {this.getRateOfChangeArrow(prevBoundedUserStats.MinutesPlayed, currBoundedUserStats.MinutesPlayed)}");
             sb.AppendLine($"Top 1: {top1} {this.getRateOfChangeArrow(prevBoundedUserStats.Top1, currBoundedUserStats.Top1)}");
-            sb.AppendLine($"Top 3: {top3} {this.getRateOfChangeArrow(prevBoundedUserStats.Top3, currBoundedUserStats.Top3)}");
-            sb.AppendLine($"Top 5: {top5} {this.getRateOfChangeArrow(prevBoundedUserStats.Top5, currBoundedUserStats.Top5)}");
-            sb.AppendLine($"Top 10: {top10} {this.getRateOfChangeArrow(prevBoundedUserStats.Top10, currBoundedUserStats.Top10)}");
-            sb.AppendLine($"Top 25: {top25} {this.getRateOfChangeArrow(prevBoundedUserStats.Top25, currBoundedUserStats.Top25)}");
+            //sb.AppendLine($"Top 3: {top3} {this.getRateOfChangeArrow(prevBoundedUserStats.Top3, currBoundedUserStats.Top3)}");
+            //sb.AppendLine($"Top 5: {top5} {this.getRateOfChangeArrow(prevBoundedUserStats.Top5, currBoundedUserStats.Top5)}");
+            //sb.AppendLine($"Top 10: {top10} {this.getRateOfChangeArrow(prevBoundedUserStats.Top10, currBoundedUserStats.Top10)}");
+            //sb.AppendLine($"Top 25: {top25} {this.getRateOfChangeArrow(prevBoundedUserStats.Top25, currBoundedUserStats.Top25)}");
 
             return sb.ToString();
         }
@@ -105,7 +106,6 @@
         private TimeBoundedUserStats getTimeBoundedUserStatsStringAux(DateTime startTime, DateTime endTime)
         {
             int startIndex = 0;
-            int endIndex = 0;
 
             // Find the first user statistic index for the time period.
             foreach (UserStats userStats in this._userStatsList)
@@ -118,22 +118,19 @@
                 startIndex++;
             }
 
+            int idx;
+
             // Find the last user statistic index for the time period.
-            for (int i = 0; i < this._userStatsList.Count; i++)
+            for (idx = this._userStatsList.Count - 1; idx >= 0; idx--)
             {
-                if (this._userStatsList[i].Timestamp <= endTime && i == this._userStatsList.Count - 1)
-                {
-                    break;
-                }
-                else if (this._userStatsList[i].Timestamp <= endTime)
-                {
-                    endIndex++;
-                }
-                else
+                if (this._userStatsList[idx].Timestamp <= endTime)
                 {
                     break;
                 }
             }
+
+            // If no records come before the end time, set the end index to 0.
+            int endIndex = idx == -1 ? 0 : idx;
 
             // Initialize stats as negative. These should only be negative when a user has no previous table entries.
             int playersBagged = -1;
@@ -186,6 +183,11 @@
         /// <returns>Rate of change arrow (up or down) in unicode format.</returns>
         private string getRateOfChangeArrow(double prevVal, double currVal)
         {
+            if (prevVal < 0 && currVal == 0)
+            {
+                // Return "=" when the user had no data for the previous stat and the current value is populated with 0.
+                return "=";
+            }
             if (currVal > prevVal)
             {
                 // Up arrow.
