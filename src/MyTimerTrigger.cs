@@ -163,7 +163,7 @@ namespace Spca.Function
         public void SendText(string number, string message)
         {
             MessageResource.Create(
-                body: $"[Beta Testing]\n\n{message}",
+                body: message,
                 from: new Twilio.Types.PhoneNumber(MyTimerTrigger.TWILIO_PHONE),
                 to: new Twilio.Types.PhoneNumber(number)
             );
