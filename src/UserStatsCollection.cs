@@ -183,10 +183,10 @@
         /// <returns>Rate of change arrow (up or down) in unicode format.</returns>
         private string getRateOfChangeArrow(double prevVal, double currVal)
         {
-            if (prevVal < 0 && currVal == 0)
+            if (prevVal < 0 || currVal < 0)
             {
-                // Return "=" when the user had no data for the previous stat and the current value is populated with 0.
-                return "=";
+                // Do not return any rate of change indicators when transitioning to or from a negative value.
+                return "";
             }
             if (currVal > prevVal)
             {

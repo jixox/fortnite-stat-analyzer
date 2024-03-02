@@ -93,7 +93,21 @@ namespace Spca.Function
             List<PlayerInfoTableEntity> playerInfos = this._tableManager.LoadPlayerInfoTableEntities();
 
             Dictionary<string, string> cohortMessages = new Dictionary<string, string>();
-            int lookback = 1;
+            int lookback;
+            string cohortIntroMessage = "";
+
+            // If the day is Sunday, provide a summary of stats pertaining to the previous week rather than the usual lookback period.
+            if (DateTime.UtcNow.DayOfWeek == DayOfWeek.Sunday)
+            {
+                lookback = 7;
+                cohortIntroMessage = "Weekly summary!\n";
+            }
+            else
+            {
+                lookback = 1;
+            }
+
+            cohortIntroMessage = string.Join("", cohortIntroMessage, "Stats from the past {0} day(s):\n\n{1}");
 
             foreach (PlayerInfoTableEntity playerInfo in playerInfos)
             {
@@ -128,7 +142,7 @@ namespace Spca.Function
                     else
                     {
                         // Begin this cohort's message with the first user's stats.
-                        cohortMessages.Add(cohort, $"Stats from the past {lookback} day(s):\n\n{timeBoundedUserStats}");
+                        cohortMessages.Add(cohort, string.Format(cohortIntroMessage, lookback, timeBoundedUserStats));
                     }
                 }
             }
