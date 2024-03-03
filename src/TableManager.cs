@@ -92,10 +92,9 @@
             string trioStats = JsonConvert.SerializeObject(userStats.GetValue("trio"));
             string squadStats = JsonConvert.SerializeObject(userStats.GetValue("squad"));
 
-
             TableClient tableClient = this._tableServiceClient.GetTableClient(TableManager.UserStatsTableName);
 
-            // Create a new ITableRntity.
+            // Create a new ITableEntity.
             // Azure DB will convert this object's properties into columns in the database. 
             UserStatsTableEntity entity = new UserStatsTableEntity()
             {
